@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Fields that must never be mutated directly by a client. They are only
+    // ever changed by trusted Cloud Functions (which use the Admin SDK and
+    // bypass these rules entirely). This stops users from editing their own
+    // coin balance, gameboard position, completed-book list, etc. from devtools.
+    function protectedFieldsUntouched() {
+      let protectedKeys = [
+        'coins', 'gameboardPosition', 'completedBooks', 'ownedCharacters',
+        'streak', 'lastReadDate', 'achievements', 'totalBooksCompleted'
+      ];
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedKeys);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && protectedFieldsUntouched();
+      allow delete: if false;
+
+      // Reading list is freely managed by the owning user - no rewards live here.
+      match /books/{bookId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Quiz sessions store the server-generated answer key; the client may
+      // only ever read its own questions, never write or view answers directly.
+      match /quizSessions/{sessionId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      match /achievementsLog/{logId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+    }
+
+    // Static reference data (characters, gameboard layout, shop prices).
+    match /catalog/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

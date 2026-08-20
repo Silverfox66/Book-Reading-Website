@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-body bg-gradient-to-b from-violet-50 via-white to-orange-50 text-ink-900 antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Baloo 2', system-ui, sans-serif;
+}
+
+/* Visible focus ring for keyboard users on every interactive element */
+:focus-visible {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-display font-bold text-white
+    shadow-pop transition-transform active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-primary {
+  @apply btn bg-quest-purple hover:bg-purple-700;
+}
+
+.btn-gold {
+  @apply btn bg-quest-gold text-ink-900 hover:brightness-95;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-display font-bold
+    border-2 border-quest-purple text-quest-purple bg-white hover:bg-violet-50 transition-colors disabled:opacity-50;
+}
+
+.card {
+  @apply rounded-3xl bg-white shadow-card p-5;
+}
+
+.sr-only-focusable:not(:focus) {
+  @apply sr-only;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d8b4fe;
+  border-radius: 999px;
+}
