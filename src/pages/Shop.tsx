@@ -21,8 +21,9 @@ export default function Shop() {
     try {
       await purchaseCharacter(characterId);
       setFeedback('Character purchased! 🎉');
-    } catch (err: any) {
-      setError(err?.message || 'Purchase failed. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Purchase failed. Please try again.';
+      setError(message || 'Purchase failed. Please try again.');
     } finally {
       setBusyCharacter(null);
     }
@@ -35,8 +36,9 @@ export default function Shop() {
     try {
       await moveOnBoard(cost, spaces);
       setFeedback(`Your character moved ${spaces} space${spaces > 1 ? 's' : ''} forward!`);
-    } catch (err: any) {
-      setError(err?.message || 'Move failed. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Move failed. Please try again.';
+      setError(message || 'Move failed. Please try again.');
     } finally {
       setBusyMoveCost(null);
     }
