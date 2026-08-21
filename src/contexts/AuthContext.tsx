@@ -28,12 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        await ensureUserDocument(firebaseUser);
+      try {
+        setUser(firebaseUser);
+  
+        if (firebaseUser) {
+          await ensureUserDocument(firebaseUser);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
+  
     return unsub;
   }, []);
 
