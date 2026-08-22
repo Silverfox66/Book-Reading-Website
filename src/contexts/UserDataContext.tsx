@@ -7,8 +7,6 @@ import {
   onSnapshot,
   orderBy,
   query,
-  serverTimestamp,
-  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -41,30 +39,8 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
       return;
     }
     setLoading(true);
-    const profileRef = doc(db, 'users', user.uid);
-    const unsubProfile = onSnapshot(profileRef, (snap) => {
-      if (snap.exists()) {
-        setProfile(snap.data() as UserProfile);
-      } else {
-        void setDoc(profileRef, {
-          uid: user.uid,
-          displayName: user.displayName || 'BookIt Reader',
-          photoURL: user.photoURL,
-          email: user.email,
-          coins: 0,
-          totalBooksCompleted: 0,
-          activeCharacterId: 'bookworm',
-          ownedCharacters: ['bookworm'],
-          gameboardPosition: 0,
-          streak: 0,
-          lastReadDate: null,
-          achievements: [],
-          createdAt: serverTimestamp(),
-        });
-      }
-      setLoading(false);
-    }, () => {
-      setProfile(null);
+    const unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+      if (snap.exists()) setProfile(snap.data() as UserProfile);
       setLoading(false);
     });
     const booksQuery = query(collection(db, 'users', user.uid, 'books'), orderBy('addedAt', 'desc'));
