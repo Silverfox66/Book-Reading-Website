@@ -15,6 +15,20 @@ export default function BoardPath({ nodes, currentPosition, characterId }: Props
     rows.push(nodes.slice(i, i + PER_ROW));
   }
 
+  const mapHeight = rows.length * 100;
+  const routePoints = rows.flatMap((row, rowIdx) => {
+    const xPositions = [100, 300, 500, 700, 900];
+    const rowPoints = xPositions.map((x) => ({ x, y: 50 + rowIdx * 100 }));
+    return rowIdx % 2 === 1 ? rowPoints.reverse() : rowPoints;
+  });
+  const routePath = routePoints.reduce((path, point, pointIdx) => {
+    if (pointIdx === 0) return `M ${point.x} ${point.y}`;
+    const previous = routePoints[pointIdx - 1];
+    if (previous.y === point.y) return `${path} L ${point.x} ${point.y}`;
+    const direction = point.x > previous.x ? 1 : -1;
+    return `${path} C ${previous.x + direction * 80} ${previous.y + 35}, ${point.x - direction * 80} ${point.y - 35}, ${point.x} ${point.y}`;
+  }, '');
+
   return (
     <div className="relative overflow-hidden rounded-[2rem] border-8 border-white bg-[#dff2d2] p-3 shadow-card md:p-5">
       <div className="relative overflow-hidden rounded-[1.5rem] border-2 border-emerald-900/10 bg-[#b9dfa8] px-3 py-5 md:px-8 md:py-8">
@@ -28,9 +42,9 @@ export default function BoardPath({ nodes, currentPosition, characterId }: Props
         </div>
 
         <div className="relative">
-          <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" viewBox="0 0 1000 1300" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M100 45 C 400 90, 600 50, 900 145 S 650 270, 100 345 S 350 470, 900 545 S 650 670, 100 745 S 350 870, 900 945 S 650 1070, 100 1145 S 400 1240, 900 1280" fill="none" stroke="#fff7d6" strokeWidth="58" strokeLinecap="round" opacity="0.9" />
-            <path d="M100 45 C 400 90, 600 50, 900 145 S 650 270, 100 345 S 350 470, 900 545 S 650 670, 100 745 S 350 870, 900 945 S 650 1070, 100 1145 S 400 1240, 900 1280" fill="none" stroke="#c98951" strokeWidth="34" strokeLinecap="round" strokeDasharray="8 12" />
+          <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" viewBox={`0 0 1000 ${mapHeight}`} preserveAspectRatio="none" aria-hidden="true">
+            <path d={routePath} fill="none" stroke="#fff7d6" strokeWidth="72" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+            <path d={routePath} fill="none" stroke="#c98951" strokeWidth="44" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="10 14" />
           </svg>
 
           <div className="pointer-events-none absolute left-2 top-6 z-10 text-3xl opacity-80 md:left-8" aria-hidden="true">🌲</div>
@@ -38,12 +52,12 @@ export default function BoardPath({ nodes, currentPosition, characterId }: Props
           <div className="pointer-events-none absolute left-2 top-[58%] z-10 text-3xl opacity-80 md:left-8" aria-hidden="true">🌻</div>
           <div className="pointer-events-none absolute right-2 top-[82%] z-10 text-3xl opacity-80 md:right-8" aria-hidden="true">🌲</div>
 
-          <div className="relative z-20 flex flex-col gap-8 py-2 md:gap-12">
+          <div className="relative z-20 flex flex-col gap-10 py-2 md:gap-10">
             {rows.map((row, rowIdx) => {
               const reversed = rowIdx % 2 === 1;
               const displayRow = reversed ? [...row].reverse() : row;
               return (
-                <div key={rowIdx} className="grid grid-cols-5 items-center gap-1 md:gap-4">
+                <div key={rowIdx} className="grid grid-cols-5 items-center gap-0">
                   {displayRow.map((node) => (
                     <BoardNode
                       key={node.index}
