@@ -12,6 +12,15 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
 type Phase = 'loading' | 'in-progress' | 'submitting' | 'result' | 'error';
 
+function quizErrorMessage(error: unknown, action: 'start' | 'grade'): string {
+  const code = (error as { code?: string })?.code || '';
+  if (code === 'functions/unauthenticated') return 'Please sign in again before starting a quiz.';
+  if (code === 'functions/not-found') return 'This book or quiz session could not be found.';
+  if (code === 'functions/failed-precondition') return 'This quiz session is no longer available. Please try again.';
+  if (code === 'functions/unavailable' || code === 'functions/internal') return 'The quiz server is unavailable. Make sure Firebase Functions are deployed.';
+  return action === 'start' ? 'Could not start the quiz. Please try again.' : 'We could not grade your quiz. Please try again.';
+}
+
 export default function QuizModal({ book, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -40,7 +49,7 @@ export default function QuizModal({ book, onClose }: Props) {
       setResult(null);
       setPhase('in-progress');
     } catch (err) {
-      setErrorMsg('Could not start the quiz. Please try again.');
+      setErrorMsg(quizErrorMessage(err, 'start'));
       setPhase('error');
     }
   }
@@ -65,8 +74,9 @@ export default function QuizModal({ book, onClose }: Props) {
       const res = await submitQuiz(book.id, sessionId, finalAnswers);
       setResult({ score: res.score, passed: res.passed, coinsAwarded: res.coinsAwarded });
       setPhase('result');
+      if (res.passed) window.setTimeout(onClose, 1800);
     } catch (err) {
-      setErrorMsg('We could not grade your quiz. Please try again.');
+      setErrorMsg(quizErrorMessage(err, 'grade'));
       setPhase('error');
     }
   }

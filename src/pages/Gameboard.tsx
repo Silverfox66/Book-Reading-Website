@@ -11,9 +11,16 @@ export default function Gameboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-extrabold text-ink-900">BookIt Gameboard</h1>
-        <p className="text-ink-900/70">Your reading journey, one node at a time.</p>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-quest-purple">Your adventure map</p>
+          <h1 className="text-3xl font-extrabold text-ink-900">BookIt Gameboard</h1>
+          <p className="text-ink-900/70">Follow the trail from your first page to the summit.</p>
+        </div>
+        <div className="text-left sm:text-right">
+          <p className="text-sm font-bold text-ink-900/60">Current expedition</p>
+          <p className="font-display text-xl font-extrabold text-quest-purple">Chapter {profile.gameboardPosition + 1}</p>
+        </div>
       </div>
 
       <div className="card">

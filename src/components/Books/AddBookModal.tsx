@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { BookSearchResult, searchBooksByTitle } from '../../api/booksApi';
 
 interface Props {
   onClose: () => void;
@@ -12,6 +13,39 @@ export default function AddBookModal({ onClose, onAdd }: Props) {
   const [genre, setGenre] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<BookSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      if (title.trim().length < 2) {
+        setResults([]);
+        return;
+      }
+      setSearching(true);
+      try {
+        setResults(await searchBooksByTitle(title, controller.signal));
+      } catch (err) {
+        if (!controller.signal.aborted) setResults([]);
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [title]);
+
+  function selectBook(book: BookSearchResult) {
+    setTitle(book.title);
+    setAuthor(book.author);
+    setCoverUrl(book.coverUrl);
+    setGenre(book.genre);
+    setResults([]);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -55,6 +89,26 @@ export default function AddBookModal({ onClose, onAdd }: Props) {
               className="w-full rounded-xl border-2 border-violet-100 px-3 py-2 focus:border-quest-purple"
               required
             />
+            {searching && <p className="mt-1 text-xs text-ink-900/60" role="status">Searching the book catalog…</p>}
+            {!searching && results.length > 0 && (
+              <ul className="mt-2 max-h-64 overflow-y-auto rounded-xl border-2 border-violet-100 bg-white shadow-lg" aria-label="Book search results">
+                {results.map((book) => (
+                  <li key={book.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectBook(book)}
+                      className="flex w-full items-center gap-3 border-b border-violet-50 px-3 py-2 text-left last:border-0 hover:bg-violet-50"
+                    >
+                      {book.coverUrl ? <img src={book.coverUrl} alt="" className="h-12 w-8 rounded object-cover" /> : <span className="flex h-12 w-8 items-center justify-center rounded bg-violet-100" aria-hidden="true">📕</span>}
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-bold text-ink-900">{book.title}</span>
+                        <span className="block truncate text-xs text-ink-900/60">{book.author}{book.publishedYear ? ` · ${book.publishedYear}` : ''}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div>
             <label htmlFor="book-author" className="mb-1 block text-sm font-bold text-ink-900">
