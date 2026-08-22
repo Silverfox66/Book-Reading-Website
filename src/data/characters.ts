@@ -1,4 +1,5 @@
 import { Character } from '../types';
+import { EXTRA_CHARACTERS, SECRET_CHARACTERS } from './extraCharacters';
 
 export const CHARACTERS: Character[] = [
   {
@@ -39,4 +40,8 @@ export const CHARACTERS: Character[] = [
   },
 ];
 
-export const CHARACTER_MAP = Object.fromEntries(CHARACTERS.map((c) => [c.id, c]));
+export { EXTRA_CHARACTERS, SECRET_CHARACTERS };
+
+export const CHARACTER_MAP = Object.fromEntries(
+  [...CHARACTERS, ...EXTRA_CHARACTERS, ...SECRET_CHARACTERS].map((c) => [c.id, c])
+);

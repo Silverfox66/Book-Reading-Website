@@ -1,9 +1,9 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { randomBytes, randomUUID } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 import { generateQuizQuestions, gradeAnswers } from './quizEngine.js';
-import { CHARACTER_PRICES, MOVEMENT_OPTIONS, BOARD_LENGTH, QUIZ_REWARD_COINS, BOOKWORM_BONUS_COINS } from './catalog.js';
+import { CHARACTER_PACKS, CHARACTER_PRICES, MOVEMENT_OPTIONS, BOARD_LENGTH, QUIZ_REWARD_COINS, BOOKWORM_BONUS_COINS } from './catalog.js';
 
 initializeApp();
 const db = getFirestore();
@@ -208,6 +208,36 @@ export const purchaseCharacter = onCall(async (request) => {
     tx.update(userRef, { coins: newCoins, ownedCharacters: newOwned });
 
     return { ok: true as const, coins: newCoins, ownedCharacters: newOwned };
+  });
+});
+
+/** Opens a premium pack and atomically awards one random unowned hidden character. */
+export const openCharacterPack = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+
+  const packId = String(request.data?.packId || '');
+  const pack = CHARACTER_PACKS[packId];
+  if (!pack) throw new HttpsError('invalid-argument', 'Unknown character pack.');
+
+  const userRef = db.doc(`users/${uid}`);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    if (!snap.exists) throw new HttpsError('not-found', 'User profile not found.');
+    const user = snap.data()!;
+    const owned: string[] = user.ownedCharacters || [];
+    const available = pack.characterIds.filter((id) => !owned.includes(id));
+
+    if (available.length === 0) throw new HttpsError('already-exists', 'You already own every character in this pack.');
+    if ((user.coins || 0) < pack.price) throw new HttpsError('failed-precondition', 'Not enough coins.');
+
+    const characterId = available[randomInt(available.length)];
+    tx.update(userRef, {
+      coins: (user.coins || 0) - pack.price,
+      ownedCharacters: [...owned, characterId],
+    });
+
+    return { ok: true as const, coins: (user.coins || 0) - pack.price, characterId };
   });
 });
 

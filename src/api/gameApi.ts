@@ -22,6 +22,12 @@ interface MoveResponse {
   gameboardPosition: number;
 }
 
+interface OpenCharacterPackResponse {
+  ok: true;
+  coins: number;
+  characterId: string;
+}
+
 /**
  * All reward-affecting actions go through callable Cloud Functions backed by the
  * Admin SDK, so a user can never edit their own coins / position / completed
@@ -45,6 +51,12 @@ export const submitQuiz = async (bookId: string, sessionId: string, answers: num
 export const purchaseCharacter = async (characterId: string) => {
   const fn = httpsCallable<{ characterId: string }, PurchaseCharacterResponse>(functions, 'purchaseCharacter');
   const res = await fn({ characterId });
+  return res.data;
+};
+
+export const openCharacterPack = async (packId: string) => {
+  const fn = httpsCallable<{ packId: string }, OpenCharacterPackResponse>(functions, 'openCharacterPack');
+  const res = await fn({ packId });
   return res.data;
 };
 
