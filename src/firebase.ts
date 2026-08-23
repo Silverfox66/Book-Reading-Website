@@ -13,8 +13,14 @@ const firebaseConfig = {
   measurementId: "G-SRGXRHV2S9"
 };
 
-export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+export const app =
+  getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
+
 export const db = getFirestore(app);
-export const functions = getFunctions(app);
+
+// Firebase Functions are deployed in us-central1
+export const functions = getFunctions(app, 'us-central1');
+
 export const googleProvider = new GoogleAuthProvider();
